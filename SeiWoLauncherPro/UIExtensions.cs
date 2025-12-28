@@ -1,5 +1,4 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
@@ -103,7 +102,7 @@ namespace SeiWoLauncherPro
         /// <summary>
         /// 逃生口：直接对实例进行任意操作
         /// </summary>
-        public static T With<T>(this T element, Action<T> action)
+        public static T With<T>(this T element, Action<T>? action)
         {
             action?.Invoke(element);
             return element;
@@ -118,7 +117,7 @@ namespace SeiWoLauncherPro
         /// <summary>
         /// 简化版绑定：Bind(TextBlock.TextProperty, "Title")
         /// </summary>
-        public static T Bind<T>(this T element, DependencyProperty dp, string path, BindingMode mode = BindingMode.Default, IValueConverter converter = null) where T : DependencyObject
+        public static T Bind<T>(this T element, DependencyProperty dp, string path, BindingMode mode = BindingMode.Default, IValueConverter? converter = null) where T : DependencyObject
         {
             var binding = new Binding(path) { Mode = mode, Converter = converter };
             BindingOperations.SetBinding(element, dp, binding);
@@ -144,7 +143,7 @@ namespace SeiWoLauncherPro
             return element;
         }
 
-        public static T Color<T>(this T element, Brush foreground, Brush background = null) where T : Control
+        public static T Color<T>(this T element, Brush foreground, Brush? background = null) where T : Control
         {
             element.Foreground = foreground;
             if (background != null) element.Background = background;

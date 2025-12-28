@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -55,8 +54,10 @@ namespace SeiWoLauncherPro {
 
             // 3. 注入 Z-Order 守护钩子
             if (IsBottomMost) {
-                HwndSource source = HwndSource.FromHwnd(handle);
-                source.AddHook(WndProc);
+                HwndSource? source = HwndSource.FromHwnd(handle);
+                if (source != null) {
+                    source.AddHook(WndProc);
+                }
 
                 // 初始化时先置底一次
                 SendToBottom(handle);
@@ -78,7 +79,7 @@ namespace SeiWoLauncherPro {
         }
 
         private void SetAsDesktopChild(IntPtr handle) {
-            ArrayList windowHandles = new ArrayList();
+            ArrayList windowHandles = new();
             Win32Methods.EnumWindows((h, list) => {
                 list.Add(h);
                 return true;
