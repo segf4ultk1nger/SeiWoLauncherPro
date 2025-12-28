@@ -23,7 +23,7 @@ namespace SeiWoLauncherPro {
                 CornerRadius = new CornerRadius(16), // 大圆角更显苹果味
                 Smoothness = 0.6,
                 BorderThickness = 0,
-                Background = new SolidColorBrush(Color.FromArgb(96, 0, 0, 0)),
+                Background = new SolidColorBrush(Color.FromArgb(148, 0, 0, 0)),
                 CornerClip = true,
                 Width = 400,
                 Height = 600,

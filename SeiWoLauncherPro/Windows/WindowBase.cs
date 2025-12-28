@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Shell;
@@ -12,19 +13,20 @@ namespace SeiWoLauncherPro {
         public bool IsNoActivate { get; set; } = true;
         public bool IsUseWindowChromeTransparency { get; set; } = true;
         public bool IsBottomMost { get; set; } = true;
+        public bool UseClearTouch { get; set; } = true;
 
         protected WindowBase() {
             // 初始化 Build 钩子
             Content = Build();
 
             if (IsUseWindowChromeTransparency) {
-                ApplyWindowChrome();
+                ApplyWindowChromeTransparent();
             }
         }
 
         protected abstract FrameworkElement Build();
 
-        private void ApplyWindowChrome() {
+        private void ApplyWindowChromeTransparent() {
             this.WindowStyle = WindowStyle.None;
             this.ResizeMode = ResizeMode.NoResize;
             this.Background = Brushes.Transparent;
@@ -37,6 +39,13 @@ namespace SeiWoLauncherPro {
                 CornerRadius = new CornerRadius(0),
                 NonClientFrameEdges = NonClientFrameEdges.None,
             });
+        }
+
+        private void ApplyClearTouch() {
+            Stylus.SetIsFlicksEnabled(this, false);
+            Stylus.SetIsPressAndHoldEnabled(this, false);
+            Stylus.SetIsTapFeedbackEnabled(this, false);
+            Stylus.SetIsTouchFeedbackEnabled(this, false);
         }
 
         protected override void OnSourceInitialized(EventArgs e) {
