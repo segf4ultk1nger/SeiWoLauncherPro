@@ -1,13 +1,12 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Media.Effects; // 添加 Effects 命名空间
+using System.Windows.Media.Effects;
 
-namespace SeiWoLauncherPro
-{
-    public enum BorderPosition
-    {
+// 添加 Effects 命名空间
+
+namespace SeiWoLauncherPro.Controls {
+    public enum BorderPosition {
         Inside,
         Center,
         Outside
@@ -17,11 +16,12 @@ namespace SeiWoLauncherPro
     /// A Decorator that draws a border with "Smooth" (Squircle/Continuous) corners.
     /// Logic adapted from Swift SmoothRoundedRectangle.
     /// </summary>
-    public class SmoothBorder : Decorator
-    {
+    public class SmoothBorder : Decorator {
         // 定义内部 Visuals
         private readonly DrawingVisual _mainVisual = new DrawingVisual();
         private readonly DrawingVisual _shadowVisual = new DrawingVisual();
+
+        private Geometry _hitTestGeometry;
 
         #region Dependency Properties
 
@@ -29,8 +29,7 @@ namespace SeiWoLauncherPro
             DependencyProperty.Register(nameof(Background), typeof(Brush), typeof(SmoothBorder),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
-        public Brush Background
-        {
+        public Brush Background {
             get => (Brush)GetValue(BackgroundProperty);
             set => SetValue(BackgroundProperty, value);
         }
@@ -39,28 +38,27 @@ namespace SeiWoLauncherPro
             DependencyProperty.Register(nameof(BorderBrush), typeof(Brush), typeof(SmoothBorder),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
-        public Brush BorderBrush
-        {
+        public Brush BorderBrush {
             get => (Brush)GetValue(BorderBrushProperty);
             set => SetValue(BorderBrushProperty, value);
         }
 
         public static readonly DependencyProperty BorderThicknessProperty =
             DependencyProperty.Register(nameof(BorderThickness), typeof(double), typeof(SmoothBorder),
-                new FrameworkPropertyMetadata(1.0, FrameworkPropertyMetadataOptions.AffectsRender | FrameworkPropertyMetadataOptions.AffectsMeasure));
+                new FrameworkPropertyMetadata(1.0,
+                    FrameworkPropertyMetadataOptions.AffectsRender | FrameworkPropertyMetadataOptions.AffectsMeasure));
 
-        public double BorderThickness
-        {
+        public double BorderThickness {
             get => (double)GetValue(BorderThicknessProperty);
             set => SetValue(BorderThicknessProperty, value);
         }
 
         public static readonly DependencyProperty PaddingProperty =
             DependencyProperty.Register(nameof(Padding), typeof(Thickness), typeof(SmoothBorder),
-                new FrameworkPropertyMetadata(new Thickness(0), FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsArrange));
+                new FrameworkPropertyMetadata(new Thickness(0),
+                    FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsArrange));
 
-        public Thickness Padding
-        {
+        public Thickness Padding {
             get => (Thickness)GetValue(PaddingProperty);
             set => SetValue(PaddingProperty, value);
         }
@@ -69,8 +67,7 @@ namespace SeiWoLauncherPro
             DependencyProperty.Register(nameof(CornerRadius), typeof(CornerRadius), typeof(SmoothBorder),
                 new FrameworkPropertyMetadata(new CornerRadius(0), FrameworkPropertyMetadataOptions.AffectsRender));
 
-        public CornerRadius CornerRadius
-        {
+        public CornerRadius CornerRadius {
             get => (CornerRadius)GetValue(CornerRadiusProperty);
             set => SetValue(CornerRadiusProperty, value);
         }
@@ -82,8 +79,7 @@ namespace SeiWoLauncherPro
         /// <summary>
         /// Factor between 0 (Circular) and 1.0 (Highly smoothed). Default is 0.6 (Apple Continuous style).
         /// </summary>
-        public double Smoothness
-        {
+        public double Smoothness {
             get => (double)GetValue(SmoothnessProperty);
             set => SetValue(SmoothnessProperty, value);
         }
@@ -92,8 +88,7 @@ namespace SeiWoLauncherPro
             DependencyProperty.Register(nameof(BorderPosition), typeof(BorderPosition), typeof(SmoothBorder),
                 new FrameworkPropertyMetadata(BorderPosition.Inside, FrameworkPropertyMetadataOptions.AffectsRender));
 
-        public BorderPosition BorderPosition
-        {
+        public BorderPosition BorderPosition {
             get => (BorderPosition)GetValue(BorderPositionProperty);
             set => SetValue(BorderPositionProperty, value);
         }
@@ -101,10 +96,10 @@ namespace SeiWoLauncherPro
         // 修改 CornerClip 的 Metadata 为 AffectsArrange，因为我们需要在 Arrange 中重新计算子元素的 Clip
         public static readonly DependencyProperty CornerClipProperty =
             DependencyProperty.Register(nameof(CornerClip), typeof(bool), typeof(SmoothBorder),
-                new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender | FrameworkPropertyMetadataOptions.AffectsArrange));
+                new FrameworkPropertyMetadata(false,
+                    FrameworkPropertyMetadataOptions.AffectsRender | FrameworkPropertyMetadataOptions.AffectsArrange));
 
-        public bool CornerClip
-        {
+        public bool CornerClip {
             get => (bool)GetValue(CornerClipProperty);
             set => SetValue(CornerClipProperty, value);
         }
@@ -115,8 +110,7 @@ namespace SeiWoLauncherPro
             DependencyProperty.Register(nameof(ShadowColor), typeof(Color), typeof(SmoothBorder),
                 new FrameworkPropertyMetadata(Colors.Black, FrameworkPropertyMetadataOptions.AffectsRender));
 
-        public Color ShadowColor
-        {
+        public Color ShadowColor {
             get => (Color)GetValue(ShadowColorProperty);
             set => SetValue(ShadowColorProperty, value);
         }
@@ -125,8 +119,7 @@ namespace SeiWoLauncherPro
             DependencyProperty.Register(nameof(ShadowBlurRadius), typeof(double), typeof(SmoothBorder),
                 new FrameworkPropertyMetadata(5.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
-        public double ShadowBlurRadius
-        {
+        public double ShadowBlurRadius {
             get => (double)GetValue(ShadowBlurRadiusProperty);
             set => SetValue(ShadowBlurRadiusProperty, value);
         }
@@ -135,8 +128,7 @@ namespace SeiWoLauncherPro
             DependencyProperty.Register(nameof(ShadowDepth), typeof(double), typeof(SmoothBorder),
                 new FrameworkPropertyMetadata(5.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
-        public double ShadowDepth
-        {
+        public double ShadowDepth {
             get => (double)GetValue(ShadowDepthProperty);
             set => SetValue(ShadowDepthProperty, value);
         }
@@ -145,8 +137,7 @@ namespace SeiWoLauncherPro
             DependencyProperty.Register(nameof(ShadowDirection), typeof(double), typeof(SmoothBorder),
                 new FrameworkPropertyMetadata(315.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
-        public double ShadowDirection
-        {
+        public double ShadowDirection {
             get => (double)GetValue(ShadowDirectionProperty);
             set => SetValue(ShadowDirectionProperty, value);
         }
@@ -155,10 +146,18 @@ namespace SeiWoLauncherPro
             DependencyProperty.Register(nameof(ShadowOpacity), typeof(double), typeof(SmoothBorder),
                 new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
-        public double ShadowOpacity
-        {
+        public double ShadowOpacity {
             get => (double)GetValue(ShadowOpacityProperty);
             set => SetValue(ShadowOpacityProperty, value);
+        }
+
+        public static readonly DependencyProperty ShadowNoCasterProperty =
+            DependencyProperty.Register(nameof(ShadowNoCaster), typeof(bool), typeof(SmoothBorder),
+                new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public bool ShadowNoCaster {
+            get => (bool)GetValue(ShadowNoCasterProperty);
+            set => SetValue(ShadowNoCasterProperty, value);
         }
 
         #endregion
@@ -169,20 +168,18 @@ namespace SeiWoLauncherPro
         protected override int VisualChildrenCount => base.VisualChildrenCount + 2;
 
         // 重写 GetVisualChild 以控制绘制顺序
-        protected override Visual GetVisualChild(int index)
-        {
+        protected override Visual GetVisualChild(int index) {
             // 顺序：
             // 0: Shadow (最底层)
             // 1: Main (背景与边框，遮挡 Shadow 的实体部分)
             // 2: Child (内容，最顶层)
-            
+
             if (index == 0) return _shadowVisual;
             if (index == 1) return _mainVisual;
-            
+
             // Decorator 的 Child 在 base.GetVisualChild(0) 中
             // 如果 Child 存在，它是第3个元素 (index 2)
-            if (index == 2 && base.VisualChildrenCount > 0)
-            {
+            if (index == 2 && base.VisualChildrenCount > 0) {
                 return base.GetVisualChild(0);
             }
 
@@ -193,8 +190,7 @@ namespace SeiWoLauncherPro
 
         #region Layout Overrides
 
-        protected override Size MeasureOverride(Size constraint)
-        {
+        protected override Size MeasureOverride(Size constraint) {
             var child = Child;
             var borderThickness = BorderThickness;
             var padding = Padding;
@@ -203,8 +199,7 @@ namespace SeiWoLauncherPro
             var horizontalOverhead = padding.Left + padding.Right + (2 * borderThickness);
             var verticalOverhead = padding.Top + padding.Bottom + (2 * borderThickness);
 
-            if (child != null)
-            {
+            if (child != null) {
                 var availableSize = new Size(
                     Math.Max(0, constraint.Width - horizontalOverhead),
                     Math.Max(0, constraint.Height - verticalOverhead));
@@ -219,11 +214,9 @@ namespace SeiWoLauncherPro
             return new Size(horizontalOverhead, verticalOverhead);
         }
 
-        protected override Size ArrangeOverride(Size finalSize)
-        {
+        protected override Size ArrangeOverride(Size finalSize) {
             var child = Child;
-            if (child != null)
-            {
+            if (child != null) {
                 var borderThickness = BorderThickness;
                 var padding = Padding;
 
@@ -238,27 +231,24 @@ namespace SeiWoLauncherPro
                 child.Arrange(innerRect);
 
                 // Handle Clipping logic for Child specifically
-                if (CornerClip)
-                {
+                if (CornerClip) {
                     // 我们需要将 Clip 应用于 Child，而不是 this，否则会裁掉外阴影。
                     // 计算相对于 Child 的几何图形（反向平移）
                     var clipRect = new Rect(
-                        -innerRect.Left, 
-                        -innerRect.Top, 
-                        finalSize.Width, 
+                        -innerRect.Left,
+                        -innerRect.Top,
+                        finalSize.Width,
                         finalSize.Height);
-                    
+
                     var clipGeometry = GetSmoothGeometry(clipRect, BorderPosition.Center);
                     child.Clip = clipGeometry;
-                }
-                else
-                {
+                } else {
                     child.Clip = null;
                 }
             }
 
             // 移除原本对 this.Clip 的设置，因为它会裁剪掉阴影
-            // if (CornerClip) ... this.Clip = ... 
+            // if (CornerClip) ... this.Clip = ...
 
             return finalSize;
         }
@@ -267,15 +257,13 @@ namespace SeiWoLauncherPro
 
         #region Rendering
 
-        protected override void OnRender(DrawingContext drawingContext)
-        {
+        protected override void OnRender(DrawingContext drawingContext) {
             // OnRender 不再直接绘制，而是触发我们自定义 Visual 的更新。
             // 实际上由于使用了 AffectsRender，每次属性变更都会调用 OnRender。
             UpdateVisuals();
         }
 
-        private void UpdateVisuals()
-        {
+        private void UpdateVisuals() {
             var rect = new Rect(0, 0, ActualWidth, ActualHeight);
             if (rect.Width == 0 || rect.Height == 0) return;
 
@@ -285,8 +273,7 @@ namespace SeiWoLauncherPro
 
             // Adjust Rect based on BorderPosition
             Rect drawRect = rect;
-            switch (BorderPosition)
-            {
+            switch (BorderPosition) {
                 case BorderPosition.Inside:
                     drawRect.Inflate(-thickness / 2, -thickness / 2);
                     break;
@@ -299,20 +286,19 @@ namespace SeiWoLauncherPro
 
             var geometry = GetSmoothGeometry(drawRect, BorderPosition);
 
+            _hitTestGeometry = geometry;
+
             // 1. Update Shadow Visual (最底层)
-            using (DrawingContext dc = _shadowVisual.RenderOpen())
-            {
-                if (ShadowOpacity > 0)
-                {
-                    var effect = new DropShadowEffect
-                    {
+            using (DrawingContext dc = _shadowVisual.RenderOpen()) {
+                if (ShadowOpacity > 0) {
+                    var effect = new DropShadowEffect {
                         Color = ShadowColor,
                         BlurRadius = ShadowBlurRadius,
                         ShadowDepth = ShadowDepth,
                         Direction = ShadowDirection,
                         Opacity = ShadowOpacity
                     };
-                    
+
                     // 必须 Freeze 否则可能有性能问题或线程问题
                     if (effect.CanFreeze) effect.Freeze();
                     _shadowVisual.Effect = effect;
@@ -321,24 +307,46 @@ namespace SeiWoLauncherPro
                     // 我们绘制一个黑色的形状，它会被 MainVisual 的背景遮挡，只露出 Effect 产生的阴影。
                     // 注意：如果 Background 是半透明的，可能会看到下面的黑色 Caster。这是 WPF 实现此类阴影的常见限制。
                     dc.DrawGeometry(Brushes.Black, null, geometry);
-                }
-                else
-                {
+
+                    if (ShadowNoCaster) {
+                        // 创建一个足够大的“全域”矩形
+                        // 技巧：Visual 的坐标系是局部的，所以负坐标足够覆盖阴影扩散区即可
+                        var infiniteRect = new RectangleGeometry(
+                            new Rect(-10000, -10000, 20000, 20000)
+                        );
+
+                        // 执行布尔运算： 全域 - 实体形状 = 只有中间是洞的形状
+                        // 注意：Geometry.Combine 开销略大，但在 UI 布局稳定时只计算一次，完全 OK
+                        var hollowGeometry = Geometry.Combine(
+                            infiniteRect,
+                            geometry,
+                            GeometryCombineMode.Exclude,
+                            null
+                        );
+
+                        // 冻结以提升性能（如果是复杂的 Path 很有必要）
+                        if (hollowGeometry.CanFreeze) hollowGeometry.Freeze();
+
+                        // 应用剪裁：这就把中间那坨黑色的 Caster 物理切除了
+                        _shadowVisual.Clip = hollowGeometry;
+                    } else {
+                        // 如果不开启，记得清除 Clip，否则属性切换时会有 Bug
+                        _shadowVisual.Clip = null;
+                    }
+                } else {
                     _shadowVisual.Effect = null;
                 }
             }
 
             // 2. Update Main Visual (中间层 - 背景和边框)
-            using (DrawingContext dc = _mainVisual.RenderOpen())
-            {
-                if (background != null || (brush != null && thickness > 0))
-                {
+            using (DrawingContext dc = _mainVisual.RenderOpen()) {
+                if (background != null || (brush != null && thickness > 0)) {
                     Pen pen = null;
-                    if (brush != null && thickness > 0)
-                    {
+                    if (brush != null && thickness > 0) {
                         pen = new Pen(brush, thickness);
                         if (pen.CanFreeze) pen.Freeze();
                     }
+
                     dc.DrawGeometry(background, pen, geometry);
                 }
             }
@@ -346,10 +354,34 @@ namespace SeiWoLauncherPro
 
         #endregion
 
+        #region Hit Testing
+
+        /// <summary>
+        /// 强制接管点击测试。
+        /// 无论 Background 是不是 null，只要鼠标在我们的圆角几何体内，就认为命中了。
+        /// </summary>
+        protected override HitTestResult HitTestCore(PointHitTestParameters hitTestParameters)
+        {
+            // 1. 如果没有几何体（还没渲染过），使用默认行为
+
+            // 2. 检查鼠标点是否在我们的圆角矩形内
+            // FillContains 检查填充区域（即图形内部），正好符合“整个按钮区域”的需求
+            if (_hitTestGeometry.FillContains(hitTestParameters.HitPoint))
+            {
+                // 3. 返回 PointHitTestResult，指定 'this' 为命中对象
+                // 这告诉 WPF：“是的，即使这里没画颜色，我也在这里，我被点到了”
+                return new PointHitTestResult(this, hitTestParameters.HitPoint);
+            }
+
+            // 4. 如果不在几何体内（比如圆角的外部空白处），返回 null，让点击穿透下去
+            return null;
+        }
+
+        #endregion
+
         #region Math & Geometry Generation
 
-        private Geometry GetSmoothGeometry(Rect rect, BorderPosition pos)
-        {
+        private Geometry GetSmoothGeometry(Rect rect, BorderPosition pos) {
             var radii = CornerRadius;
             var smoothness = Math.Max(0, Math.Min(1, Smoothness));
 
@@ -366,8 +398,7 @@ namespace SeiWoLauncherPro
 
             StreamGeometry geom = new StreamGeometry();
 
-            using (StreamGeometryContext ctx = geom.Open())
-            {
+            using (StreamGeometryContext ctx = geom.Open()) {
                 // Start Point: Top edge, after top-left corner
                 ctx.BeginFigure(new Point(rect.Left + normRect.TopLeft.SegmentLength, rect.Top), true, true);
 
@@ -382,10 +413,8 @@ namespace SeiWoLauncherPro
             return geom;
         }
 
-        private void DrawCornerPath(StreamGeometryContext ctx, Rect rect, CornerAttributes attributes, Corner corner)
-        {
-            if (attributes.Radius > 0)
-            {
+        private void DrawCornerPath(StreamGeometryContext ctx, Rect rect, CornerAttributes attributes, Corner corner) {
+            if (attributes.Radius > 0) {
                 var prms = ComputeParameters(rect, attributes);
                 var points = ComputeCurvePoints(prms, rect, corner);
 
@@ -423,9 +452,7 @@ namespace SeiWoLauncherPro
 
                 // 4. Second Bezier (Ramp down)
                 ctx.BezierTo(points[4], points[5], points[3], true, true);
-            }
-            else
-            {
+            } else {
                 // Square corner
                 ctx.LineTo(CurveStart(rect, corner, 0), true, true);
             }
@@ -435,40 +462,38 @@ namespace SeiWoLauncherPro
 
         private enum Corner { TopRight, BottomRight, BottomLeft, TopLeft }
 
-        private struct CornerAttributes
-        {
+        private struct CornerAttributes {
             public double Radius;
             public double Smoothness;
             public double SegmentLength;
 
-            public CornerAttributes(double radius, double smoothness)
-            {
+            public CornerAttributes(double radius, double smoothness) {
                 Radius = radius;
                 Smoothness = smoothness;
                 SegmentLength = radius * (1 + smoothness);
             }
         }
 
-        private struct SmoothRectangleAttributes
-        {
+        private struct SmoothRectangleAttributes {
             public CornerAttributes TopRight;
             public CornerAttributes BottomRight;
             public CornerAttributes BottomLeft;
             public CornerAttributes TopLeft;
 
-            public SmoothRectangleAttributes(CornerAttributes tr, CornerAttributes br, CornerAttributes bl, CornerAttributes tl)
-            {
-                TopRight = tr; BottomRight = br; BottomLeft = bl; TopLeft = tl;
+            public SmoothRectangleAttributes(CornerAttributes tr, CornerAttributes br, CornerAttributes bl,
+                CornerAttributes tl) {
+                TopRight = tr;
+                BottomRight = br;
+                BottomLeft = bl;
+                TopLeft = tl;
             }
         }
 
-        private struct SmoothCornerParameters
-        {
+        private struct SmoothCornerParameters {
             public double a, b, c, d, p, r, theta;
         }
 
-        private SmoothRectangleAttributes NormalizeCorners(Rect rect, SmoothRectangleAttributes rectAttr)
-        {
+        private SmoothRectangleAttributes NormalizeCorners(Rect rect, SmoothRectangleAttributes rectAttr) {
             var tr = GetNormalizedCorner(rectAttr.TopRight, rect, rectAttr.BottomRight, rectAttr.TopLeft);
             var br = GetNormalizedCorner(rectAttr.BottomRight, rect, rectAttr.TopRight, rectAttr.BottomLeft);
             var bl = GetNormalizedCorner(rectAttr.BottomLeft, rect, rectAttr.TopLeft, rectAttr.BottomRight);
@@ -477,33 +502,27 @@ namespace SeiWoLauncherPro
             return new SmoothRectangleAttributes(tr, br, bl, tl);
         }
 
-        private CornerAttributes GetNormalizedCorner(CornerAttributes baseAttr, Rect rect, CornerAttributes vertNeighbour, CornerAttributes horizNeighbour)
-        {
+        private CornerAttributes GetNormalizedCorner(CornerAttributes baseAttr, Rect rect,
+            CornerAttributes vertNeighbour, CornerAttributes horizNeighbour) {
             var (trR1, trS1) = CalculateNormalization(baseAttr, horizNeighbour, rect.Width);
             var (trR2, trS2) = CalculateNormalization(baseAttr, vertNeighbour, rect.Height);
             return new CornerAttributes(Math.Min(trR1, trR2), Math.Min(trS1, trS2));
         }
 
-        private (double, double) CalculateNormalization(CornerAttributes baseAttr, CornerAttributes adjacent, double edge)
-        {
-            if ((baseAttr.Radius + adjacent.Radius) >= edge)
-            {
+        private (double, double) CalculateNormalization(CornerAttributes baseAttr, CornerAttributes adjacent,
+            double edge) {
+            if ((baseAttr.Radius + adjacent.Radius) >= edge) {
                 double scaleFactor = edge / (baseAttr.Radius + adjacent.Radius);
                 return (baseAttr.Radius * scaleFactor, 0);
-            }
-            else if ((baseAttr.SegmentLength + adjacent.SegmentLength) > edge)
-            {
+            } else if ((baseAttr.SegmentLength + adjacent.SegmentLength) > edge) {
                 double scaleFactor = edge / (baseAttr.SegmentLength + adjacent.SegmentLength);
                 return (baseAttr.Radius, (1 + baseAttr.Smoothness) * scaleFactor - 1);
-            }
-            else
-            {
+            } else {
                 return (baseAttr.Radius, baseAttr.Smoothness);
             }
         }
 
-        private SmoothCornerParameters ComputeParameters(Rect rect, CornerAttributes attr)
-        {
+        private SmoothCornerParameters ComputeParameters(Rect rect, CornerAttributes attr) {
             double smoothnessFactor = attr.Smoothness;
             double p = (1 + smoothnessFactor) * attr.Radius;
 
@@ -523,11 +542,11 @@ namespace SeiWoLauncherPro
             double b = (p - arcSeg - c - d) / 3;
             double a = 2 * b;
 
-            return new SmoothCornerParameters { a = a, b = b, c = c, d = d, p = p, r = attr.Radius, theta = angleTheta };
+            return new SmoothCornerParameters
+                { a = a, b = b, c = c, d = d, p = p, r = attr.Radius, theta = angleTheta };
         }
 
-        private Point[] ComputeCurvePoints(SmoothCornerParameters prms, Rect rect, Corner corner)
-        {
+        private Point[] ComputeCurvePoints(SmoothCornerParameters prms, Rect rect, Corner corner) {
             double a = prms.a, b = prms.b, c = prms.c, d = prms.d, p = prms.p;
             double w = rect.Width;
             double h = rect.Height;
@@ -536,8 +555,7 @@ namespace SeiWoLauncherPro
 
             Point Pt(double _x, double _y) => new Point(x + _x, y + _y);
 
-            switch (corner)
-            {
+            switch (corner) {
                 case Corner.TopRight:
                     return new Point[] {
                         Pt(w - (p - a - b - c), d),
@@ -578,15 +596,13 @@ namespace SeiWoLauncherPro
             }
         }
 
-        private Point CurveStart(Rect rect, Corner corner, double p)
-        {
+        private Point CurveStart(Rect rect, Corner corner, double p) {
             double w = rect.Width;
             double h = rect.Height;
             double x = rect.X;
             double y = rect.Y;
 
-            switch (corner)
-            {
+            switch (corner) {
                 case Corner.TopRight: return new Point(x + w - p, y + 0);
                 case Corner.BottomRight: return new Point(x + w, y + h - p);
                 case Corner.BottomLeft: return new Point(x + p, y + h);
@@ -595,10 +611,8 @@ namespace SeiWoLauncherPro
             }
         }
 
-        private double StartAngle(Corner corner)
-        {
-            switch (corner)
-            {
+        private double StartAngle(Corner corner) {
+            switch (corner) {
                 case Corner.TopRight: return 270;
                 case Corner.BottomRight: return 0;
                 case Corner.BottomLeft: return 90;
@@ -607,15 +621,13 @@ namespace SeiWoLauncherPro
             }
         }
 
-        private Point CenterPoint(Rect rect, Corner corner, double radius)
-        {
+        private Point CenterPoint(Rect rect, Corner corner, double radius) {
             double w = rect.Width;
             double h = rect.Height;
             double x = rect.X;
             double y = rect.Y;
 
-            switch (corner)
-            {
+            switch (corner) {
                 case Corner.TopRight: return new Point(x + w - radius, y + radius);
                 case Corner.BottomRight: return new Point(x + w - radius, y + h - radius);
                 case Corner.BottomLeft: return new Point(x + radius, y + h - radius);
