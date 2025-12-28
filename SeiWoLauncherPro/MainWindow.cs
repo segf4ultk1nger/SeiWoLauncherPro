@@ -25,8 +25,13 @@ namespace SeiWoLauncherPro {
                 CornerClip = true,
                 Width = 400,
                 Height = 600,
+                Margin = new Thickness(10),
                 HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
+                VerticalAlignment = VerticalAlignment.Center,
+                ShadowColor = Colors.Black,
+                ShadowOpacity = 0.4,       // 设置透明度 > 0 开启阴影
+                ShadowBlurRadius = 15,     // 类似 CSS blur-radius
+                ShadowDepth = 0,
             };
             mainBorder.Child = new StackPanel()
                 .Children(new [] {

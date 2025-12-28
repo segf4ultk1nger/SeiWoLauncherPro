@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Effects; // 添加 Effects 命名空间
 
 namespace SeiWoLauncherPro
 {
@@ -18,6 +19,10 @@ namespace SeiWoLauncherPro
     /// </summary>
     public class SmoothBorder : Decorator
     {
+        // 定义内部 Visuals
+        private readonly DrawingVisual _mainVisual = new DrawingVisual();
+        private readonly DrawingVisual _shadowVisual = new DrawingVisual();
+
         #region Dependency Properties
 
         public static readonly DependencyProperty BackgroundProperty =
@@ -93,14 +98,95 @@ namespace SeiWoLauncherPro
             set => SetValue(BorderPositionProperty, value);
         }
 
+        // 修改 CornerClip 的 Metadata 为 AffectsArrange，因为我们需要在 Arrange 中重新计算子元素的 Clip
         public static readonly DependencyProperty CornerClipProperty =
             DependencyProperty.Register(nameof(CornerClip), typeof(bool), typeof(SmoothBorder),
-                new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender));
+                new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender | FrameworkPropertyMetadataOptions.AffectsArrange));
 
         public bool CornerClip
         {
             get => (bool)GetValue(CornerClipProperty);
             set => SetValue(CornerClipProperty, value);
+        }
+
+        // --- 新增 Shadow 属性 ---
+
+        public static readonly DependencyProperty ShadowColorProperty =
+            DependencyProperty.Register(nameof(ShadowColor), typeof(Color), typeof(SmoothBorder),
+                new FrameworkPropertyMetadata(Colors.Black, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public Color ShadowColor
+        {
+            get => (Color)GetValue(ShadowColorProperty);
+            set => SetValue(ShadowColorProperty, value);
+        }
+
+        public static readonly DependencyProperty ShadowBlurRadiusProperty =
+            DependencyProperty.Register(nameof(ShadowBlurRadius), typeof(double), typeof(SmoothBorder),
+                new FrameworkPropertyMetadata(5.0, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public double ShadowBlurRadius
+        {
+            get => (double)GetValue(ShadowBlurRadiusProperty);
+            set => SetValue(ShadowBlurRadiusProperty, value);
+        }
+
+        public static readonly DependencyProperty ShadowDepthProperty =
+            DependencyProperty.Register(nameof(ShadowDepth), typeof(double), typeof(SmoothBorder),
+                new FrameworkPropertyMetadata(5.0, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public double ShadowDepth
+        {
+            get => (double)GetValue(ShadowDepthProperty);
+            set => SetValue(ShadowDepthProperty, value);
+        }
+
+        public static readonly DependencyProperty ShadowDirectionProperty =
+            DependencyProperty.Register(nameof(ShadowDirection), typeof(double), typeof(SmoothBorder),
+                new FrameworkPropertyMetadata(315.0, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public double ShadowDirection
+        {
+            get => (double)GetValue(ShadowDirectionProperty);
+            set => SetValue(ShadowDirectionProperty, value);
+        }
+
+        public static readonly DependencyProperty ShadowOpacityProperty =
+            DependencyProperty.Register(nameof(ShadowOpacity), typeof(double), typeof(SmoothBorder),
+                new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public double ShadowOpacity
+        {
+            get => (double)GetValue(ShadowOpacityProperty);
+            set => SetValue(ShadowOpacityProperty, value);
+        }
+
+        #endregion
+
+        #region Visual Tree Overrides
+
+        // 重写 VisualChildrenCount，增加 MainVisual 和 ShadowVisual
+        protected override int VisualChildrenCount => base.VisualChildrenCount + 2;
+
+        // 重写 GetVisualChild 以控制绘制顺序
+        protected override Visual GetVisualChild(int index)
+        {
+            // 顺序：
+            // 0: Shadow (最底层)
+            // 1: Main (背景与边框，遮挡 Shadow 的实体部分)
+            // 2: Child (内容，最顶层)
+            
+            if (index == 0) return _shadowVisual;
+            if (index == 1) return _mainVisual;
+            
+            // Decorator 的 Child 在 base.GetVisualChild(0) 中
+            // 如果 Child 存在，它是第3个元素 (index 2)
+            if (index == 2 && base.VisualChildrenCount > 0)
+            {
+                return base.GetVisualChild(0);
+            }
+
+            throw new ArgumentOutOfRangeException(nameof(index));
         }
 
         #endregion
@@ -150,20 +236,29 @@ namespace SeiWoLauncherPro
                     Math.Max(0, finalSize.Height - (borderThickness * 2) - padding.Top - padding.Bottom));
 
                 child.Arrange(innerRect);
+
+                // Handle Clipping logic for Child specifically
+                if (CornerClip)
+                {
+                    // 我们需要将 Clip 应用于 Child，而不是 this，否则会裁掉外阴影。
+                    // 计算相对于 Child 的几何图形（反向平移）
+                    var clipRect = new Rect(
+                        -innerRect.Left, 
+                        -innerRect.Top, 
+                        finalSize.Width, 
+                        finalSize.Height);
+                    
+                    var clipGeometry = GetSmoothGeometry(clipRect, BorderPosition.Center);
+                    child.Clip = clipGeometry;
+                }
+                else
+                {
+                    child.Clip = null;
+                }
             }
 
-            // Handle Clipping logic here or in OnRender.
-            if (CornerClip)
-            {
-                // We use the full bounds for the clip.
-                // Assuming Clip should match the Background/Border shape.
-                var clipRect = new Rect(0, 0, finalSize.Width, finalSize.Height);
-                this.Clip = GetSmoothGeometry(clipRect, BorderPosition.Center);
-            }
-            else
-            {
-                this.Clip = null;
-            }
+            // 移除原本对 this.Clip 的设置，因为它会裁剪掉阴影
+            // if (CornerClip) ... this.Clip = ... 
 
             return finalSize;
         }
@@ -174,48 +269,78 @@ namespace SeiWoLauncherPro
 
         protected override void OnRender(DrawingContext drawingContext)
         {
-            var rect = new Rect(0, 0, ActualWidth, ActualHeight);
-            var thickness = BorderThickness;
-            var brush = BorderBrush;
-            var background = Background; // 获取 Background 属性
+            // OnRender 不再直接绘制，而是触发我们自定义 Visual 的更新。
+            // 实际上由于使用了 AffectsRender，每次属性变更都会调用 OnRender。
+            UpdateVisuals();
+        }
 
+        private void UpdateVisuals()
+        {
+            var rect = new Rect(0, 0, ActualWidth, ActualHeight);
             if (rect.Width == 0 || rect.Height == 0) return;
 
+            var thickness = BorderThickness;
+            var brush = BorderBrush;
+            var background = Background;
+
             // Adjust Rect based on BorderPosition
-            // The Geometry defines the CENTER of the stroke.
             Rect drawRect = rect;
             switch (BorderPosition)
             {
                 case BorderPosition.Inside:
-                    // Deflate by half thickness so the outer edge of stroke hits the bounds
                     drawRect.Inflate(-thickness / 2, -thickness / 2);
                     break;
                 case BorderPosition.Center:
-                    // Stroke centered on bounds edge
                     break;
                 case BorderPosition.Outside:
-                    // Inflate so inner edge of stroke hits the bounds
                     drawRect.Inflate(thickness / 2, thickness / 2);
                     break;
             }
 
-            // Generate Geometry
             var geometry = GetSmoothGeometry(drawRect, BorderPosition);
 
-            // Draw Background and Border
-            // 如果 background 存在 或者 (边框画笔存在 且 宽度大于0)，则进行绘制
-            if (background != null || (brush != null && thickness > 0))
+            // 1. Update Shadow Visual (最底层)
+            using (DrawingContext dc = _shadowVisual.RenderOpen())
             {
-                Pen pen = null;
-                if (brush != null && thickness > 0)
+                if (ShadowOpacity > 0)
                 {
-                    pen = new Pen(brush, thickness);
-                    // Freeze pen for performance
-                    if (pen.CanFreeze) pen.Freeze();
-                }
+                    var effect = new DropShadowEffect
+                    {
+                        Color = ShadowColor,
+                        BlurRadius = ShadowBlurRadius,
+                        ShadowDepth = ShadowDepth,
+                        Direction = ShadowDirection,
+                        Opacity = ShadowOpacity
+                    };
+                    
+                    // 必须 Freeze 否则可能有性能问题或线程问题
+                    if (effect.CanFreeze) effect.Freeze();
+                    _shadowVisual.Effect = effect;
 
-                // DrawGeometry 的第一个参数是 Brush (用于 Fill/Background)，第二个参数是 Pen (用于 Stroke/Border)
-                drawingContext.DrawGeometry(background, pen, geometry);
+                    // 绘制阴影产生源（Caster）。
+                    // 我们绘制一个黑色的形状，它会被 MainVisual 的背景遮挡，只露出 Effect 产生的阴影。
+                    // 注意：如果 Background 是半透明的，可能会看到下面的黑色 Caster。这是 WPF 实现此类阴影的常见限制。
+                    dc.DrawGeometry(Brushes.Black, null, geometry);
+                }
+                else
+                {
+                    _shadowVisual.Effect = null;
+                }
+            }
+
+            // 2. Update Main Visual (中间层 - 背景和边框)
+            using (DrawingContext dc = _mainVisual.RenderOpen())
+            {
+                if (background != null || (brush != null && thickness > 0))
+                {
+                    Pen pen = null;
+                    if (brush != null && thickness > 0)
+                    {
+                        pen = new Pen(brush, thickness);
+                        if (pen.CanFreeze) pen.Freeze();
+                    }
+                    dc.DrawGeometry(background, pen, geometry);
+                }
             }
         }
 
