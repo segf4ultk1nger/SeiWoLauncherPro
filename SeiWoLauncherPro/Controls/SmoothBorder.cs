@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Collections.Specialized;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
@@ -23,6 +24,19 @@ namespace SeiWoLauncherPro.Controls {
 
         private Geometry _hitTestGeometry;
 
+        public SmoothBorder() {
+            SetCurrentValue(MultiBackgroundsProperty, new FreezableCollection<Brush>());
+        }
+
+        private static void OnMultiBackgroundsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e) {
+            if (d is SmoothBorder border) {
+                if (e.OldValue is INotifyCollectionChanged oldC) oldC.CollectionChanged -= border.OnBrushCollectionChanged;
+                if (e.NewValue is INotifyCollectionChanged newC) newC.CollectionChanged += border.OnBrushCollectionChanged;
+                border.UpdateVisuals();
+            }
+        }
+        private void OnBrushCollectionChanged(object sender, NotifyCollectionChangedEventArgs e) => UpdateVisuals();
+
         #region Dependency Properties
 
         public static readonly DependencyProperty BackgroundProperty =
@@ -32,6 +46,15 @@ namespace SeiWoLauncherPro.Controls {
         public Brush Background {
             get => (Brush)GetValue(BackgroundProperty);
             set => SetValue(BackgroundProperty, value);
+        }
+
+        public static readonly DependencyProperty StrokeDashArrayProperty =
+            DependencyProperty.Register(nameof(StrokeDashArray), typeof(DoubleCollection), typeof(SmoothBorder),
+                new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public DoubleCollection StrokeDashArray {
+            get => (DoubleCollection)GetValue(StrokeDashArrayProperty);
+            set => SetValue(StrokeDashArrayProperty, value);
         }
 
         public static readonly DependencyProperty BorderBrushProperty =
@@ -51,6 +74,16 @@ namespace SeiWoLauncherPro.Controls {
         public double BorderThickness {
             get => (double)GetValue(BorderThicknessProperty);
             set => SetValue(BorderThicknessProperty, value);
+        }
+
+        // 使用 FreezableCollection<Brush> 以支持 XAML 集合语法和 WPF 资源系统
+        public static readonly DependencyProperty MultiBackgroundsProperty =
+            DependencyProperty.Register(nameof(MultiBackgrounds), typeof(FreezableCollection<Brush>), typeof(SmoothBorder),
+                new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public FreezableCollection<Brush> MultiBackgrounds {
+            get => (FreezableCollection<Brush>)GetValue(MultiBackgroundsProperty);
+            set => SetValue(MultiBackgroundsProperty, value);
         }
 
         public static readonly DependencyProperty PaddingProperty =
@@ -339,16 +372,45 @@ namespace SeiWoLauncherPro.Controls {
             }
 
             // 2. Update Main Visual (中间层 - 背景和边框)
+            // 2. Update Main Visual (中间层 - 背景和边框)
             using (DrawingContext dc = _mainVisual.RenderOpen()) {
-                if (background != null || (brush != null && thickness > 0)) {
-                    Pen pen = null;
-                    if (brush != null && thickness > 0) {
-                        pen = new Pen(brush, thickness);
-                        if (pen.CanFreeze) pen.Freeze();
+                Pen pen = null;
+                if (brush != null && thickness > 0) {
+                    pen = new Pen(brush, thickness);
+                    // 新增：应用虚线
+                    var dashes = StrokeDashArray;
+                    if (dashes != null && dashes.Count > 0) {
+                        pen.DashStyle = new DashStyle(dashes, 0);
                     }
-
-                    dc.DrawGeometry(background, pen, geometry);
+                    if (pen.CanFreeze) pen.Freeze();
                 }
+
+                // --- 渲染逻辑修改开始 ---
+
+                // 2.1 绘制基础背景 (Background 属性)
+                if (background != null) {
+                    // 注意：这里只画填充，不画边框
+                    dc.DrawGeometry(background, null, geometry);
+                }
+
+                // 2.2 绘制多层背景 (MultiBackgrounds 属性)
+                var multiBackgrounds = MultiBackgrounds;
+                if (multiBackgrounds != null && multiBackgrounds.Count > 0) {
+                    foreach (var layerBrush in multiBackgrounds) {
+                        if (layerBrush != null) {
+                            // 叠加绘制每一层 Brush
+                            dc.DrawGeometry(layerBrush, null, geometry);
+                        }
+                    }
+                }
+
+                // 2.3 最后绘制边框 (确保边框压在所有背景之上)
+                if (pen != null) {
+                    // 只画描边，不画填充
+                    dc.DrawGeometry(null, pen, geometry);
+                }
+
+                // --- 渲染逻辑修改结束 ---
             }
         }
 

@@ -18,12 +18,18 @@
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <_SuppressWpfTrimError>true</_SuppressWpfTrimError>
         <TrimMode>partial</TrimMode>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
       <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="Controls\SmoothButton.cs" />
+      <None Include="Controls\SmoothButton.cs" />
     </ItemGroup>
 
 </Project>

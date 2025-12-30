@@ -35,5 +35,26 @@ namespace SeiWoLauncherPro {
 
         // 关键消息：位置变动中
         public const int WM_WINDOWPOSCHANGING = 0x0046;
+
+        public const int SPI_SETDESKWALLPAPER = 0x0014;
+        public const int WM_SETTINGCHANGE = 0x001A;
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr GetWindowDC(IntPtr window);
+
+        [DllImport("gdi32.dll", SetLastError = true)]
+        public static extern uint GetPixel(IntPtr dc, int x, int y);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern int ReleaseDC(IntPtr window, IntPtr dc);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool PrintWindow(IntPtr hwnd, IntPtr hdcBlt, uint nFlags);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetShellWindow();
     }
 }

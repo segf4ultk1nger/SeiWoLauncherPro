@@ -1,5 +1,6 @@
 ﻿using SeiWoLauncherPro.Controls;
 using SeiWoLauncherPro.Controls.SymbolicIcons;
+using SeiWoLauncherPro.Utils;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -19,11 +20,15 @@ namespace SeiWoLauncherPro {
         }
 
         protected override FrameworkElement Build() {
+
+            var _blurProvider = new DesktopBlurProvider(this);
+
             var mainBorder = new SmoothBorder() {
                 CornerRadius = new CornerRadius(16), // 大圆角更显苹果味
                 Smoothness = 0.6,
                 BorderThickness = 0,
-                Background = new SolidColorBrush(Color.FromArgb(148, 0, 0, 0)),
+                // Background = new SolidColorBrush(Color.FromArgb(148, 0, 0, 0)),
+                Background = _blurProvider.BlurredBackgroundBrush,
                 CornerClip = true,
                 Width = 400,
                 Height = 600,
@@ -34,7 +39,10 @@ namespace SeiWoLauncherPro {
                 ShadowOpacity = 0.4,
                 ShadowBlurRadius = 15,
                 ShadowDepth = 0,
-                ShadowNoCaster = true
+                ShadowNoCaster = true,
+                MultiBackgrounds = new FreezableCollection<Brush>(new [] {
+                    new SolidColorBrush(Color.FromArgb(128, 0, 0, 0)),
+                })
             };
 
             SimplePanel bottomPanel = new SimplePanel();

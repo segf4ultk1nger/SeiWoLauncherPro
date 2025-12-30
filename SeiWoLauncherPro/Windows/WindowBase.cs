@@ -22,6 +22,10 @@ namespace SeiWoLauncherPro {
             if (IsUseWindowChromeTransparency) {
                 ApplyWindowChromeTransparent();
             }
+
+            if (UseClearTouch)  {
+                ApplyClearTouch();
+            }
         }
 
         protected abstract FrameworkElement Build();
