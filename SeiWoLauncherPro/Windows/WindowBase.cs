@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -14,6 +15,7 @@ namespace SeiWoLauncherPro {
         public bool IsUseWindowChromeTransparency { get; set; } = true;
         public bool IsBottomMost { get; set; } = true;
         public bool UseClearTouch { get; set; } = true;
+        public ModifierKeys DragModifierKey { get; set; } = ModifierKeys.Alt; // 默认按住 Alt 拖动
 
         protected WindowBase() {
             // 初始化 Build 钩子
@@ -23,7 +25,7 @@ namespace SeiWoLauncherPro {
                 ApplyWindowChromeTransparent();
             }
 
-            if (UseClearTouch)  {
+            if (UseClearTouch) {
                 ApplyClearTouch();
             }
         }
@@ -50,6 +52,24 @@ namespace SeiWoLauncherPro {
             Stylus.SetIsPressAndHoldEnabled(this, false);
             Stylus.SetIsTapFeedbackEnabled(this, false);
             Stylus.SetIsTouchFeedbackEnabled(this, false);
+        }
+
+        protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e) {
+            base.OnPreviewMouseLeftButtonDown(e);
+
+            System.Diagnostics.Debug.WriteLine($"Hit Source: {e.OriginalSource.GetType().Name}");
+            // 判断当前按下的修饰键是否匹配
+            if (Keyboard.Modifiers == DragModifierKey) {
+                // 1. 必须先调用 ReleaseCapture，否则 WPF 会一直把持鼠标事件
+                Win32Methods.ReleaseCapture();
+
+                // 2. 发送“点击标题栏”的系统消息
+                var handle = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+                Win32Methods.SendMessage(handle, Win32Methods.WM_NCLBUTTONDOWN, (IntPtr)Win32Methods.HT_CAPTION, IntPtr.Zero);
+
+                // 3. 标记事件已处理，防止触发子控件的点击逻辑
+                e.Handled = true;
+            }
         }
 
         protected override void OnSourceInitialized(EventArgs e) {
@@ -83,6 +103,7 @@ namespace SeiWoLauncherPro {
             if (msg == Win32Methods.WM_WINDOWPOSCHANGING) {
                 SendToBottom(hwnd);
             }
+
             return IntPtr.Zero;
         }
 

@@ -1,77 +1,33 @@
-﻿using System.Windows;
-using System.Windows.Media;
+﻿using System.Windows.Media;
 
-namespace SeiWoLauncherPro.Controls.SymbolicIcons // 记得替换为你的实际命名空间
+namespace SeiWoLauncherPro.Controls.SymbolicIcons
 {
-    /// <summary>
-    /// 专用于显示 Desktop 电脑图标的组件。
-    /// 它不需要设置 Icon 属性，只需要设置 IconColor。
-    /// </summary>
     public class SymbolicFolderIcon : SymbolicIconBase
     {
-        // 将 Path 字符串常量化
-        private const string PathDataStr = "F1 M24,24z M0,0z M3,3C2.44772,3,2,3.44772,2,4L2,7 9.58579,7 12,4.58579 10.4142,3 3,3z M14.4142,5L10.4142,9 2,9 2,20C2,20.5523,2.44772,21,3,21L21,21C21.5523,21,22,20.5523,22,20L22,6C22,5.44772,21.5523,5,21,5L14.4142,5z";
-        private const string ClipDataStr = "M0,0 V24 H24 V0 H0 Z";
+        // F1 M24,24z M0,0z 这两个点已经定义了 24x24 的边界，无需额外的 ClipGeometry
+        private const string PathData = "F1 M24,24z M0,0z M3,3C2.44772,3,2,3.44772,2,4L2,7 9.58579,7 12,4.58579 10.4142,3 3,3z M14.4142,5L10.4142,9 2,9 2,20C2,20.5523,2.44772,21,3,21L21,21C21.5523,21,22,20.5523,22,20L22,6C22,5.44772,21.5523,5,21,5L14.4142,5z";
 
-        // 静态缓存解析后的 Geometry，避免每次重绘都解析字符串，这是性能关键点。
-        private static readonly Geometry CachedMainGeometry;
-        private static readonly Geometry CachedClipGeometry;
+        // 静态缓存 Geometry，内存中只有这一份副本
+        private static readonly Geometry _cachedGeometry;
 
-        // 静态构造函数确保只解析一次
         static SymbolicFolderIcon()
         {
-            // 解析主路径几何并冻结，使其跨线程安全且高性能
-            CachedMainGeometry = Geometry.Parse(PathDataStr);
-            if (CachedMainGeometry.CanFreeze) CachedMainGeometry.Freeze();
-
-            // 解析裁剪几何并冻结
-            CachedClipGeometry = Geometry.Parse(ClipDataStr);
-            if (CachedClipGeometry.CanFreeze) CachedClipGeometry.Freeze();
+            _cachedGeometry = Geometry.Parse(PathData);
+            if (_cachedGeometry.CanFreeze) _cachedGeometry.Freeze();
         }
 
-        public SymbolicFolderIcon()
-        {
-            // 因为这个控件已经确定了图标内容，我们在这里触发一次初始化更新
-            // 这样即使在 XAML 中没有设置 IconColor，它也会用默认黑色显示出来
-            UpdateIcon();
-        }
+        public SymbolicFolderIcon() => UpdateIcon();
 
-        /// <summary>
-        /// 核心实现：利用缓存的几何体和传入的动态 Brush 构建 DrawingImage
-        /// </summary>
         protected override DrawingImage CreateDrawingImage(Brush brush)
         {
-            // 注意：对于这个特定的类，iconData 参数被忽略了，
-            // 因为图标本身的形状是这个类内在决定的。
-
-            // 1. 创建 GeometryDrawing，这是唯一动态变化的部分（因为 Brush 变了）
-            var drawing = new GeometryDrawing
-            {
-                // 这里的 brush 是从基类的 IconColorProperty 传进来的
-                Brush = brush,
-                // 使用静态缓存的几何体
-                Geometry = CachedMainGeometry
-            };
-            // 冻结 Drawing 以提升性能
+            // 直接构建 GeometryDrawing，省去 DrawingGroup 的包装开销
+            var drawing = new GeometryDrawing(brush, null, _cachedGeometry);
             if (drawing.CanFreeze) drawing.Freeze();
 
-            // 2. 创建 DrawingGroup 来应用 Clip
-            // 你的原始 XAML 中有一个 ClipGeometry，我们需要在这里还原它
-            var drawingGroup = new DrawingGroup
-            {
-                ClipGeometry = CachedClipGeometry
-            };
-            drawingGroup.Children.Add(drawing);
-            // 冻结 Group
-            if (drawingGroup.CanFreeze) drawingGroup.Freeze();
+            var image = new DrawingImage(drawing);
+            if (image.CanFreeze) image.Freeze();
 
-            // 3. 最终封装成 DrawingImage
-            var finalImage = new DrawingImage(drawingGroup);
-
-            // 极其重要：冻结最终结果。这使得它成为一个不可变的资源，WPF 渲染引擎最喜欢这个。
-            if (finalImage.CanFreeze) finalImage.Freeze();
-
-            return finalImage;
+            return image;
         }
     }
 }

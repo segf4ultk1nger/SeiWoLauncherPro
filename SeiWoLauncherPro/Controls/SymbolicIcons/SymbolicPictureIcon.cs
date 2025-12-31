@@ -2,21 +2,21 @@
 
 namespace SeiWoLauncherPro.Controls.SymbolicIcons
 {
-    public class SymbolicDesktopIcon : SymbolicIconBase
+    public class SymbolicPictureIcon : SymbolicIconBase
     {
         // F1 M24,24z M0,0z 这两个点已经定义了 24x24 的边界，无需额外的 ClipGeometry
-        private const string PathData = "F1 M24,24z M0,0z M13,18L13,20 17,20 17,22 7,22 7,20 11,20 11,18 2.9918,18C2.44405,18,2,17.5511,2,16.9925L2,4.00748C2,3.45107,2.45531,3,2.9918,3L21.0082,3C21.556,3,22,3.44892,22,4.00748L22,16.9925C22,17.5489,21.5447,18,21.0082,18L13,18z";
+        private const string PathData = "F1 M24,24z M0,0z M5,11.1005L7,9.1005 12.5,14.6005 16,11.1005 19,14.1005 19,5 5,5 5,11.1005z M4,3L20,3C20.5523,3,21,3.44772,21,4L21,20C21,20.5523,20.5523,21,20,21L4,21C3.44772,21,3,20.5523,3,20L3,4C3,3.44772,3.44772,3,4,3z M15.5,10C14.6716,10 14,9.32843 14,8.5 14,7.67157 14.6716,7 15.5,7 16.3284,7 17,7.67157 17,8.5 17,9.32843 16.3284,10 15.5,10z";
 
         // 静态缓存 Geometry，内存中只有这一份副本
         private static readonly Geometry _cachedGeometry;
 
-        static SymbolicDesktopIcon()
+        static SymbolicPictureIcon()
         {
             _cachedGeometry = Geometry.Parse(PathData);
             if (_cachedGeometry.CanFreeze) _cachedGeometry.Freeze();
         }
 
-        public SymbolicDesktopIcon() => UpdateIcon();
+        public SymbolicPictureIcon() => UpdateIcon();
 
         protected override DrawingImage CreateDrawingImage(Brush brush)
         {

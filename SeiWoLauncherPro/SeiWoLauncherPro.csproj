@@ -29,7 +29,6 @@
 
     <ItemGroup>
       <Compile Remove="Controls\SmoothButton.cs" />
-      <None Include="Controls\SmoothButton.cs" />
     </ItemGroup>
 
 </Project>
