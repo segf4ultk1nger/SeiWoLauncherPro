@@ -4,8 +4,8 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using SeiWoLauncherPro.Controls;
 using SeiWoLauncherPro.Controls.SymbolicIcons;
-using SeiwoLauncherPro.Utils;
 using SeiWoLauncherPro.Utils;
+using SeiWoLauncherPro.Windows;
 
 namespace SeiWoLauncherPro {
     public class MainWindow : WindowBase {

@@ -1,12 +1,12 @@
-﻿using System.Collections;
-using System.Diagnostics;
+﻿using SeiWoLauncherPro.Utils;
+using System.Collections;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Shell;
 
-namespace SeiWoLauncherPro {
+namespace SeiWoLauncherPro.Windows {
     public abstract class WindowBase : Window {
         // 配置项
         public bool IsIgnoreShowDesktop { get; set; } = true;

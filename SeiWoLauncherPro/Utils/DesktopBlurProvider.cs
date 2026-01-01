@@ -24,7 +24,7 @@ namespace SeiWoLauncherPro.Utils {
 
         public void RefreshSnapshot()
         {
-            IntPtr hwnd = Win32Methods.GetWallpaperWindow();
+            IntPtr hwnd = NativeWindowHelper.GetWallpaperWindow();
             if (!Win32Methods.GetWindowRect(hwnd, out Win32Methods.RECT rect)) return;
 
             int width = rect.Right - rect.Left;

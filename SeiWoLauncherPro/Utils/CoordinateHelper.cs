@@ -5,7 +5,7 @@ using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
 
-namespace SeiwoLauncherPro.Utils
+namespace SeiWoLauncherPro.Utils
 {
     public static class CoordinateHelper
     {
@@ -56,7 +56,7 @@ namespace SeiwoLauncherPro.Utils
         public static Rect GetRelativeRectToWallpaper(Window window)
         {
             IntPtr windowHandle = new WindowInteropHelper(window).Handle;
-            IntPtr wallpaperHandle = Win32Methods.GetWallpaperWindow();
+            IntPtr wallpaperHandle = NativeWindowHelper.GetWallpaperWindow();
 
             Win32Methods.RECT windowRect;
             Win32Methods.GetWindowRect(windowHandle, out windowRect);
