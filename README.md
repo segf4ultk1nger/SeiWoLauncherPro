@@ -76,3 +76,5 @@
 ### 💡 碎碎念
 
 如果你发现软件运行得比你的 osu! 还要顺滑，别惊讶，那是因为我们在动效上真的下了死功夫。
+
+目前项目还没有进行人工review，基本上都是ai vibe出来的。等我把AppGrid、ApplicationXXX服务和一些View写完后再来完整全面review一遍。后面推进一下Services的开发和单元测试以及Utils、Services代码的整理和review（Utils搬了很多轮子过来）。后面 UI 库 会考虑换成自己做的AtomicityMarkupUi库。
